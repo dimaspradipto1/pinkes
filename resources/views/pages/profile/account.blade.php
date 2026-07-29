@@ -25,18 +25,33 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold">Password Lama <span class="text-danger">*</span></label>
-                            <input type="password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" required>
-                            @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="input-group">
+                                <input type="password" id="current_password" name="current_password" class="form-control @error('current_password') is-invalid @enderror" required>
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="current_password" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Password Baru <span class="text-danger">*</span></label>
-                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" required minlength="8">
+                            <div class="input-group">
+                                <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" required minlength="8">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
                             <div class="form-text">Minimal 8 karakter.</div>
-                            @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Konfirmasi Password Baru <span class="text-danger">*</span></label>
-                            <input type="password" name="password_confirmation" class="form-control" required>
+                            <div class="input-group">
+                                <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
+                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password_confirmation" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-12 d-flex gap-2">
                             <button type="submit" class="btn btn-primary px-4">

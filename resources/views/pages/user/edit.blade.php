@@ -98,8 +98,8 @@
                                     <input type="password" class="form-control @error('password') is-invalid @enderror"
                                         id="password" name="password"
                                         placeholder="Minimal 8 karakter (opsional)">
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                        <i class="bi bi-eye" id="eyeIcon"></i>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password" tabindex="-1">
+                                        <i class="bi bi-eye"></i>
                                     </button>
                                     @error('password')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -113,8 +113,8 @@
                                     <input type="password" class="form-control"
                                         id="password_confirmation" name="password_confirmation"
                                         placeholder="Ulangi password baru">
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePasswordConfirm">
-                                        <i class="bi bi-eye" id="eyeIconConfirm"></i>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="password_confirmation" tabindex="-1">
+                                        <i class="bi bi-eye"></i>
                                     </button>
                                 </div>
                             </div>
@@ -134,32 +134,3 @@
         </div>
     </section>
 @endsection
-
-@push('scripts')
-<script>
-    // Toggle Password Visibility
-    document.getElementById('togglePassword').addEventListener('click', function () {
-        const pwd = document.getElementById('password');
-        const icon = document.getElementById('eyeIcon');
-        if (pwd.type === 'password') {
-            pwd.type = 'text';
-            icon.classList.replace('bi-eye', 'bi-eye-slash');
-        } else {
-            pwd.type = 'password';
-            icon.classList.replace('bi-eye-slash', 'bi-eye');
-        }
-    });
-
-    document.getElementById('togglePasswordConfirm').addEventListener('click', function () {
-        const pwd = document.getElementById('password_confirmation');
-        const icon = document.getElementById('eyeIconConfirm');
-        if (pwd.type === 'password') {
-            pwd.type = 'text';
-            icon.classList.replace('bi-eye', 'bi-eye-slash');
-        } else {
-            pwd.type = 'password';
-            icon.classList.replace('bi-eye-slash', 'bi-eye');
-        }
-    });
-</script>
-@endpush
