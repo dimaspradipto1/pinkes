@@ -156,9 +156,12 @@ class PeminjamanController extends Controller
                 ->where('tgl_peminjaman', '<=', $peminjaman->tgl_pengembalian)
                 ->where('tgl_pengembalian', '>=', $peminjaman->tgl_peminjaman)
                 ->where(function ($q) use ($peminjaman) {
-                    // Overlap waktu sejati: bukan hanya berurutan (jam mulai = jam selesai orang lain OK)
-                    $q->whereRaw("TIME(jam_peminjaman) < TIME(?)", [$peminjaman->jam_pengembalian])
-                      ->whereRaw("TIME(jam_pengembalian) > TIME(?)", [$peminjaman->jam_peminjaman]);
+                    // Overlap waktu sejati: bukan hanya berurutan (jam mulai = jam selesai orang lain OK).
+                    // Kolom jam_* sudah bertipe TIME, jadi bandingkan langsung tanpa membungkus
+                    // parameter di TIME(?) — MySQL native prepared statement salah menafsirkan
+                    // parameter TIME(?) sebagai 00:00:00.
+                    $q->where('jam_peminjaman', '<', $peminjaman->jam_pengembalian)
+                      ->where('jam_pengembalian', '>', $peminjaman->jam_peminjaman);
                 })
                 ->exists();
 
@@ -167,13 +170,9 @@ class PeminjamanController extends Controller
                 return back();
             }
 
-            // Cek stok
-            $barang = Barang::find($peminjaman->barang_id);
-            if ($barang && $barang->jumlah < 1) {
-                Alert::error('Stok Habis', 'Stok barang ' . $barang->nama_barang . ' sedang habis.');
-                return back();
-            }
-            if ($barang) $barang->decrement('jumlah');
+            // Tidak ada konflik jadwal sungguhan -> boleh diverifikasi meski jumlah stok
+            // saat ini tampak habis (misal jam mulai persis sama dengan jam selesai peminjam sebelumnya).
+            Barang::find($peminjaman->barang_id)?->decrement('jumlah');
         }
 
         if ($peminjaman->ruangan_id) {
@@ -182,8 +181,8 @@ class PeminjamanController extends Controller
                 ->where('tgl_peminjaman', '<=', $peminjaman->tgl_pengembalian)
                 ->where('tgl_pengembalian', '>=', $peminjaman->tgl_peminjaman)
                 ->where(function ($q) use ($peminjaman) {
-                    $q->whereRaw("TIME(jam_peminjaman) < TIME(?)", [$peminjaman->jam_pengembalian])
-                      ->whereRaw("TIME(jam_pengembalian) > TIME(?)", [$peminjaman->jam_peminjaman]);
+                    $q->where('jam_peminjaman', '<', $peminjaman->jam_pengembalian)
+                      ->where('jam_pengembalian', '>', $peminjaman->jam_peminjaman);
                 })
                 ->exists();
 
@@ -196,13 +195,9 @@ class PeminjamanController extends Controller
                 return back();
             }
 
-            $ruangan = Ruangan::find($peminjaman->ruangan_id);
-            if ($ruangan && $ruangan->jumlah < 1) {
-                if ($peminjaman->barang_id) Barang::find($peminjaman->barang_id)?->increment('jumlah');
-                Alert::error('Tidak Tersedia', 'Ruangan ' . $ruangan->nama_ruangan . ' sedang tidak tersedia.');
-                return back();
-            }
-            if ($ruangan) $ruangan->decrement('jumlah');
+            // Tidak ada konflik jadwal sungguhan -> boleh diverifikasi meski jumlah stok
+            // saat ini tampak habis (misal jam mulai persis sama dengan jam selesai peminjam sebelumnya).
+            Ruangan::find($peminjaman->ruangan_id)?->decrement('jumlah');
         }
 
         $peminjaman->update(['status' => 'validasi']);

@@ -433,7 +433,7 @@
             @php
                 $foto = $b->foto_barang && $b->foto_barang !== '-'
                     ? asset('storage/' . $b->foto_barang)
-                    : ($b->fotos->first()?->foto_barang ? asset('storage/' . $b->fotos->first()->foto_barang) : null);
+                    : ($b->fotos->first()?->nama_foto ? asset('storage/' . $b->fotos->first()->nama_foto) : null);
                 $tersedia = ($b->jumlah ?? 0) > 0;
             @endphp
             <div class="item-card" data-name="{{ strtolower($b->nama_barang) }}">
