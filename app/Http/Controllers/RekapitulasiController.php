@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peminjaman;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -67,8 +68,33 @@ class RekapitulasiController extends Controller
         $tgl_mulai   = $request->tgl_mulai;
         $tgl_selesai = $request->tgl_selesai;
 
-        // Penandatangan laporan: user dengan jabatan Kasubag Umum dan Kepegawaian
-        $penandatangan = \App\Models\User::where('jabatan_nama', 'like', '%Kasubag Umum dan Kepegawaian%')->first();
+        // Penandatangan laporan (Bisa dikustomisasi via request, database setting, atau fallback ke user Kasubag)
+        $penandatangan = null;
+        if ($request->filled('nama_pimpinan')) {
+            $penandatangan = (object) [
+                'name'             => $request->nama_pimpinan,
+                'nip'              => $request->nip_pimpinan,
+                'pangkat_golongan' => null,
+                'jabatan_nama'     => $request->jabatan_pimpinan ?? 'Kepala Sub Bagian Umum dan Kepegawaian',
+            ];
+        } elseif (Setting::getByKey('pimpinan_nama')) {
+            $penandatangan = (object) [
+                'name'             => Setting::getByKey('pimpinan_nama'),
+                'nip'              => Setting::getByKey('pimpinan_nip'),
+                'pangkat_golongan' => null,
+                'jabatan_nama'     => Setting::getByKey('pimpinan_jabatan', 'Kepala Sub Bagian Umum dan Kepegawaian'),
+            ];
+        } else {
+            $userPenandatangan = \App\Models\User::where('jabatan_nama', 'like', '%Kasubag Umum dan Kepegawaian%')->first();
+            if ($userPenandatangan) {
+                $penandatangan = (object) [
+                    'name'             => $userPenandatangan->name,
+                    'nip'              => $userPenandatangan->nip,
+                    'pangkat_golongan' => $userPenandatangan->pangkat_golongan,
+                    'jabatan_nama'     => $userPenandatangan->jabatan_nama,
+                ];
+            }
+        }
 
         $pdf = Pdf::loadView('pages.rekapitulasi.pdf', compact('peminjamen', 'tgl_mulai', 'tgl_selesai', 'jenis', 'penandatangan'));
         $filename = 'REKAP_PEMINJAMAN_' . strtoupper($jenis) . '_' . Carbon::now()->format('Ymd_His') . '.pdf';

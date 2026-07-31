@@ -84,10 +84,30 @@ class PeminjamanDataTable extends DataTable
                                 </button>
                             </form>';
                     }
+
+                    // Hapus (Admin can delete any)
+                    $btns .= '
+                        <form action="' . route('peminjaman.destroy', $item->id) . '" method="POST" style="display:inline;">
+                            ' . csrf_field() . '
+                            ' . method_field('DELETE') . '
+                            <button type="submit" class="btn btn-danger btn-sm" title="Hapus"
+                                onclick="return confirm(\'Yakin ingin menghapus peminjaman ini?\')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>';
                 } else {
-                    // User: edit hanya jika pending
+                    // User: edit & hapus hanya jika pending
                     if ($item->status === 'pending') {
                         $btns .= '<a href="' . route('peminjaman.edit', $item->id) . '" class="btn btn-warning btn-sm text-white" title="Edit"><i class="bi bi-pencil-square"></i></a>';
+                        $btns .= '
+                            <form action="' . route('peminjaman.destroy', $item->id) . '" method="POST" style="display:inline;">
+                                ' . csrf_field() . '
+                                ' . method_field('DELETE') . '
+                                <button type="submit" class="btn btn-danger btn-sm" title="Hapus"
+                                    onclick="return confirm(\'Yakin ingin menghapus peminjaman ini?\')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>';
                     }
                 }
 

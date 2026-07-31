@@ -60,7 +60,10 @@
                     <div class="p-3 bg-light rounded-3">
                         <div class="text-muted small mb-1">Barang</div>
                         <div class="fw-semibold">{{ $peminjaman->barang?->nama_barang ?? 'Tidak ada Barang' }}</div>
-                        @if($peminjaman->barang_id)<div class="text-muted small">{{ $peminjaman->barang->kode_barang }}</div>@endif
+                        @if($peminjaman->barang_id)
+                            <div class="text-muted small">{{ $peminjaman->barang->kode_barang }}</div>
+                            <div class="mt-1"><span class="badge bg-info text-white">Jumlah Pinjam: {{ $peminjaman->jumlah_pinjam }}</span></div>
+                        @endif
                     </div>
                 </div>
                 <div class="col-md-6">

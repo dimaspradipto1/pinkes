@@ -34,7 +34,7 @@ Route::middleware(['auth', 'Checkrole'])->group(function () {
     Route::post('/account-setting', [UserController::class, 'updatePassword'])->name('account.password');
 
     // Peminjaman
-    Route::resource('/peminjaman', PeminjamanController::class)->except(['destroy']);
+    Route::resource('/peminjaman', PeminjamanController::class);
     // Admin: verifikasi, tolak, selesai
     Route::post('/peminjaman/{peminjaman}/verifikasi', [PeminjamanController::class, 'verifikasi'])->name('peminjaman.verifikasi');
     Route::post('/peminjaman/{peminjaman}/tolak',      [PeminjamanController::class, 'tolak'])->name('peminjaman.tolak');
@@ -53,5 +53,9 @@ Route::middleware(['auth', 'Checkrole'])->group(function () {
         Route::resource('/pinjam',  PinjamController::class);
         Route::resource('/jabatan', JabatanController::class);
         Route::resource('/user',    UserController::class);
+
+        // Settings pimpinan
+        Route::get('/settings',  [App\Http\Controllers\SettingController::class, 'index'])->name('settings.index');
+        Route::post('/settings', [App\Http\Controllers\SettingController::class, 'update'])->name('settings.update');
     });
 });

@@ -13,7 +13,7 @@
         {{-- Filter Card --}}
         <div class="card shadow-sm mb-4">
             <div class="card-body pt-4">
-                <form action="{{ route('rekapitulasi.index') }}" method="GET" class="row g-3 align-items-end">
+                <form action="{{ route('rekapitulasi.index') }}" method="GET" id="filter-form" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label for="tgl_mulai" class="form-label fw-bold">Dari Tanggal</label>
                         <input type="date" name="tgl_mulai" id="tgl_mulai" class="form-control" value="{{ request('tgl_mulai') }}">
@@ -38,11 +38,34 @@
                             <i class="bi bi-arrow-clockwise"></i>
                         </a>
                         @if(Auth::user()->isAdmin())
-                        <a href="{{ route('rekapitulasi.pdf', request()->all()) }}" target="_blank" class="btn btn-danger">
+                        <button type="button" onclick="exportPdf()" class="btn btn-danger">
                             <i class="bi bi-file-earmark-pdf"></i> PDF
-                        </a>
+                        </button>
                         @endif
                     </div>
+
+                    {{-- Opsi Kustomisasi Tanda Tangan (Hanya Admin) --}}
+                    @if(Auth::user()->isAdmin())
+                    <div class="col-12 mt-3 pt-2 border-top">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="nama_pimpinan" class="form-label fw-semibold small text-muted">Nama Pimpinan / Penandatangan</label>
+                                <input type="text" name="nama_pimpinan" id="nama_pimpinan" class="form-control form-control-sm"
+                                    placeholder="Contoh: Rina Wijaya, S.Sos" value="{{ request('nama_pimpinan') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="nip_pimpinan" class="form-label fw-semibold small text-muted">NIP Pimpinan / Penandatangan</label>
+                                <input type="text" name="nip_pimpinan" id="nip_pimpinan" class="form-control form-control-sm"
+                                    placeholder="Contoh: 198501012010012001" value="{{ request('nip_pimpinan') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="jabatan_pimpinan" class="form-label fw-semibold small text-muted">Jabatan Pimpinan / Penandatangan</label>
+                                <input type="text" name="jabatan_pimpinan" id="jabatan_pimpinan" class="form-control form-control-sm"
+                                    placeholder="Contoh: Kepala Sub Bagian Umum dan Kepegawaian" value="{{ request('jabatan_pimpinan') }}">
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </form>
             </div>
         </div>
@@ -122,3 +145,25 @@
     </div></div>
 </section>
 @endsection
+
+@push('scripts')
+@if(Auth::user()->isAdmin())
+<script>
+function exportPdf() {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+    
+    const originalAction = form.action;
+    const originalTarget = form.target;
+    
+    form.action = "{{ route('rekapitulasi.pdf') }}";
+    form.target = "_blank";
+    form.submit();
+    
+    // Restore original action & target
+    form.action = originalAction;
+    form.target = originalTarget;
+}
+</script>
+@endif
+@endpush

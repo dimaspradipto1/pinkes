@@ -51,6 +51,14 @@
                     @error('barang_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
+                {{-- Jumlah Pinjam --}}
+                <div class="col-md-6">
+                    <label for="jumlah_pinjam" class="form-label fw-semibold">Jumlah Pinjam Barang <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control @error('jumlah_pinjam') is-invalid @enderror" 
+                        id="jumlah_pinjam" name="jumlah_pinjam" min="1" value="{{ old('jumlah_pinjam', $peminjaman->jumlah_pinjam) }}" required>
+                    @error('jumlah_pinjam')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Ruangan <span class="text-muted fw-normal">(opsional)</span></label>
                     <select class="form-select @error('ruangan_id') is-invalid @enderror" name="ruangan_id">
@@ -60,6 +68,9 @@
                         @endforeach
                     </select>
                     @error('ruangan_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="form-text text-muted small mt-1">
+                        <i class="bi bi-info-circle me-1"></i> Ruangan yang sedang aktif dipinjam/diajukan tidak akan muncul di sini.
+                    </div>
                 </div>
 
                 <div class="col-12 mt-0">

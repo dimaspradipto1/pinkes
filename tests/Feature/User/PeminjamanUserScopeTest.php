@@ -7,6 +7,7 @@ use App\Models\Barang;
 use App\Models\Peminjaman;
 use App\Models\Pinjam;
 use App\Models\User;
+use App\Models\Ruangan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -93,9 +94,38 @@ class PeminjamanUserScopeTest extends TestCase
         $response->assertRedirect(route('peminjaman.index'));
     }
 
-    public function test_tidak_ada_route_hapus_peminjaman_untuk_siapapun(): void
+    public function test_user_bisa_hapus_peminjaman_sendiri_jika_pending(): void
     {
-        $this->assertFalse(\Illuminate\Support\Facades\Route::has('peminjaman.destroy'));
+        $user = User::factory()->create(['role' => 'kasi']);
+        $p    = $this->buatPeminjaman($user, 'pending');
+
+        $response = $this->actingAs($user)->delete(route('peminjaman.destroy', $p));
+
+        $response->assertRedirect(route('peminjaman.index'));
+        $this->assertDatabaseMissing('peminjamen', ['id' => $p->id]);
+    }
+
+    public function test_user_tidak_bisa_hapus_peminjaman_sendiri_jika_bukan_pending(): void
+    {
+        $user = User::factory()->create(['role' => 'kasi']);
+        $p    = $this->buatPeminjaman($user, 'validasi');
+
+        $response = $this->actingAs($user)->delete(route('peminjaman.destroy', $p));
+
+        $response->assertRedirect(route('peminjaman.index'));
+        $this->assertDatabaseHas('peminjamen', ['id' => $p->id]);
+    }
+
+    public function test_user_tidak_bisa_hapus_peminjaman_orang_lain(): void
+    {
+        $user1 = User::factory()->create(['role' => 'kasi']);
+        $user2 = User::factory()->create(['role' => 'kasi']);
+        $p     = $this->buatPeminjaman($user2, 'pending');
+
+        $response = $this->actingAs($user1)->delete(route('peminjaman.destroy', $p));
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('peminjamen', ['id' => $p->id]);
     }
 
     public function test_status_label_sesuai_ketentuan(): void
@@ -104,5 +134,31 @@ class PeminjamanUserScopeTest extends TestCase
         $this->assertSame('Divalidasi', Peminjaman::$statusLabels['validasi']['label']);
         $this->assertSame('Ditolak', Peminjaman::$statusLabels['ditolak']['label']);
         $this->assertSame('Selesai', Peminjaman::$statusLabels['selesai']['label']);
+    }
+
+    public function test_ruangan_yang_sedang_dipinjam_tidak_tampil_di_form_create(): void
+    {
+        $user = User::factory()->create(['role' => 'kasi']);
+        $ruangan1 = Ruangan::factory()->create();
+        $ruangan2 = Ruangan::factory()->create();
+
+        // Pinjam ruangan1 secara aktif (pending)
+        Peminjaman::create([
+            'user_id' => $user->id,
+            'ruangan_id' => $ruangan1->id,
+            'jumlah_pinjam' => 1,
+            'pinjam_id' => Pinjam::factory()->create()->id,
+            'tgl_peminjaman' => now()->toDateString(),
+            'jam_peminjaman' => '08:00',
+            'tgl_pengembalian' => now()->toDateString(),
+            'jam_pengembalian' => '10:00',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('peminjaman.create'));
+
+        $response->assertStatus(200);
+        $response->assertDontSee($ruangan1->kode_ruangan);
+        $response->assertSee($ruangan2->kode_ruangan);
     }
 }

@@ -37,7 +37,12 @@
         .text-center { text-align: center; }
 
         /* FOOTER */
-        .footer { margin-top: 20px; }
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            left: 30px;
+            right: 30px;
+        }
         .ttd-block { float: right; width: 240px; text-align: left; font-size: 10pt; }
         .ttd-block .ttd-jabatan { margin: 0 0 50px 0; line-height: 1.5; }
         .ttd-block .ttd-nama { font-weight: bold; margin: 0; text-decoration: underline; }
@@ -86,8 +91,16 @@
 
     <div class="filter-info">
         Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('d F Y H:i') }}<br>
-        Periode: {{ $tgl_mulai ? \Carbon\Carbon::parse($tgl_mulai)->translatedFormat('d F Y') : 'Awal' }}
-        s/d {{ $tgl_selesai ? \Carbon\Carbon::parse($tgl_selesai)->translatedFormat('d F Y') : 'Akhir' }}
+        Periode: 
+        @if($tgl_mulai && $tgl_selesai)
+            {{ \Carbon\Carbon::parse($tgl_mulai)->translatedFormat('d F Y') }} s/d {{ \Carbon\Carbon::parse($tgl_selesai)->translatedFormat('d F Y') }}
+        @elseif($tgl_mulai)
+            Mulai {{ \Carbon\Carbon::parse($tgl_mulai)->translatedFormat('d F Y') }}
+        @elseif($tgl_selesai)
+            Sampai {{ \Carbon\Carbon::parse($tgl_selesai)->translatedFormat('d F Y') }}
+        @else
+            Semua Data (Seluruh Periode)
+        @endif
     </div>
 
     {{-- TABEL DATA --}}
@@ -142,9 +155,17 @@
     {{-- TANDA TANGAN --}}
     <div class="footer clearfix">
         <div class="ttd-block">
-            <p class="ttd-jabatan">Kepala Sub Bagian Umum<br>dan Kepegawaian</p>
+            <p class="ttd-jabatan">
+                @if(!empty($penandatangan->jabatan_nama))
+                    {!! nl2br(e($penandatangan->jabatan_nama)) !!}
+                @else
+                    Kepala Sub Bagian Umum<br>dan Kepegawaian
+                @endif
+            </p>
             <p class="ttd-nama">{{ $penandatangan->name ?? '..........................................' }}</p>
-            <p class="ttd-pangkat">{{ $penandatangan->pangkat_golongan ?? '-' }}</p>
+            @if(!empty($penandatangan->pangkat_golongan) && $penandatangan->pangkat_golongan !== '-')
+                <p class="ttd-pangkat">{{ $penandatangan->pangkat_golongan }}</p>
+            @endif
             <p class="ttd-nip">NIP. {{ $penandatangan->nip ?? '-' }}</p>
         </div>
     </div>

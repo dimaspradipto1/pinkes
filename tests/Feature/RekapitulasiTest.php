@@ -150,7 +150,7 @@ class RekapitulasiTest extends TestCase
 
         $this->assertStringContainsString('DINAS KESEHATAN', $html);
         $this->assertStringContainsString('PEMERINTAH KOTA BATAM', $html);
-        $this->assertStringContainsString('Kepala Sub Bagian Umum', $html);
+        $this->assertStringContainsString('Kasubag Umum', $html);
         $this->assertStringContainsString('Rina Wijaya, S.Sos', $html);
         $this->assertStringContainsString('198501012010012001', $html);
         $this->assertStringNotContainsString('Andi Saputra', $html);
@@ -167,5 +167,57 @@ class RekapitulasiTest extends TestCase
         ])->render();
 
         $this->assertStringNotContainsString('Andi Saputra', $html);
+    }
+
+    public function test_admin_bisa_akses_dan_simpan_pengaturan_pimpinan(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $response = $this->actingAs($admin)->get(route('settings.index'));
+        $response->assertOk();
+        $response->assertSee('Kustomisasi Penandatangan Laporan');
+
+        $response = $this->actingAs($admin)->post(route('settings.update'), [
+            'pimpinan_nama' => 'Dr. H. Sabar, M.Si',
+            'pimpinan_nip' => '197001012000031001',
+            'pimpinan_jabatan' => 'Kepala Dinas Kesehatan',
+        ]);
+
+        $response->assertRedirect(route('settings.index'));
+        $this->assertSame('Dr. H. Sabar, M.Si', \App\Models\Setting::getByKey('pimpinan_nama'));
+        $this->assertSame('197001012000031001', \App\Models\Setting::getByKey('pimpinan_nip'));
+        $this->assertSame('Kepala Dinas Kesehatan', \App\Models\Setting::getByKey('pimpinan_jabatan'));
+    }
+
+    public function test_user_biasa_tidak_bisa_akses_settings(): void
+    {
+        $user = User::factory()->create(['role' => 'kasi']);
+
+        $this->actingAs($user)->get(route('settings.index'))->assertForbidden();
+        $this->actingAs($user)->post(route('settings.update'), [])->assertForbidden();
+    }
+
+    public function test_pdf_menggunakan_nama_pimpinan_dari_settings(): void
+    {
+        \App\Models\Setting::setByKey('pimpinan_nama', 'Dr. H. Sabar, M.Si');
+        \App\Models\Setting::setByKey('pimpinan_nip', '197001012000031001');
+        \App\Models\Setting::setByKey('pimpinan_jabatan', 'Kepala Dinas Kesehatan');
+
+        $html = View::make('pages.rekapitulasi.pdf', [
+            'peminjamen'    => collect(),
+            'tgl_mulai'     => null,
+            'tgl_selesai'   => null,
+            'jenis'         => 'semua',
+            'penandatangan' => (object) [
+                'name'             => \App\Models\Setting::getByKey('pimpinan_nama'),
+                'nip'              => \App\Models\Setting::getByKey('pimpinan_nip'),
+                'pangkat_golongan' => null,
+                'jabatan_nama'     => \App\Models\Setting::getByKey('pimpinan_jabatan'),
+            ],
+        ])->render();
+
+        $this->assertStringContainsString('Kepala Dinas Kesehatan', $html);
+        $this->assertStringContainsString('Dr. H. Sabar, M.Si', $html);
+        $this->assertStringContainsString('197001012000031001', $html);
     }
 }

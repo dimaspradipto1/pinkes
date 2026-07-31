@@ -45,6 +45,7 @@ class PeminjamanVerifikasiTest extends TestCase
         $response = $this->actingAs($user)->post(route('peminjaman.store'), [
             'pinjam_id'        => $pinjam->id,
             'barang_id'        => $barang->id,
+            'jumlah_pinjam'    => 1,
             'tgl_peminjaman'   => now()->toDateString(),
             'jam_peminjaman'   => '08:00',
             'tgl_pengembalian' => now()->toDateString(),
@@ -198,8 +199,23 @@ class PeminjamanVerifikasiTest extends TestCase
         $this->assertSame('pending', $kedua->fresh()->status, 'Overlap waktu sungguhan harus ditolak (tetap pending).');
     }
 
-    public function test_fungsi_hapus_peminjaman_tidak_ada(): void
+    public function test_admin_bisa_hapus_peminjaman(): void
     {
-        $this->assertFalse(\Illuminate\Support\Facades\Route::has('peminjaman.destroy'));
+        $admin = $this->admin();
+        $p = Peminjaman::create([
+            'user_id' => $this->userBiasa()->id,
+            'barang_id' => Barang::factory()->create()->id,
+            'pinjam_id' => Pinjam::factory()->create()->id,
+            'tgl_peminjaman' => now()->toDateString(),
+            'jam_peminjaman' => '08:00',
+            'tgl_pengembalian' => now()->toDateString(),
+            'jam_pengembalian' => '10:00',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->delete(route('peminjaman.destroy', $p));
+
+        $response->assertRedirect(route('peminjaman.index'));
+        $this->assertDatabaseMissing('peminjamen', ['id' => $p->id]);
     }
 }
